@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* ── Base palette ────────────────────────────────── */
+  --color-base:           var(--bg-base);
+  --color-surface:        var(--bg-surface);
+  --color-elevated:       var(--bg-elevated);
+  --color-subtle:         var(--bg-subtle);
+
+  --color-border-default: var(--border-default);
+  --color-border-subtle:  var(--border-subtle);
+
+  --color-primary:        var(--text-primary);
+  --color-secondary:      var(--text-secondary);
+  --color-muted:          var(--text-muted);
+  --color-faint:          var(--text-faint);
+
+  /* ── Accent palette ──────────────────────────────── */
+  --color-brand:          var(--accent-brand);
+  --color-brand-dim:      var(--accent-brand-dim);
+  --color-brand-text:     var(--accent-brand-text);
+  --color-positive:       var(--accent-positive);
+  --color-pos-dim:        var(--accent-pos-dim);
+  --color-warning:        var(--accent-warning);
+  --color-warn-dim:       var(--accent-warn-dim);
+  --color-danger:         var(--accent-danger);
+  --color-danger-dim:     var(--accent-danger-dim);
+  --color-secure:         var(--accent-secure);
+  --color-secure-dim:     var(--accent-secure-dim);
+
+  /* ── Agent identity ──────────────────────────────── */
+  --color-agent-realist:    var(--agent-realist);
+  --color-agent-realist-dim:var(--agent-realist-dim);
+  --color-agent-optimist:   var(--agent-optimist);
+  --color-agent-optimist-dim:var(--agent-optimist-dim);
+  --color-agent-critic:     var(--agent-critic);
+  --color-agent-critic-dim: var(--agent-critic-dim);
+  --color-agent-strategist: var(--agent-strategist);
+  --color-agent-strat-dim:  var(--agent-strat-dim);
+  --color-agent-aicoach:    var(--agent-aicoach);
+  --color-agent-aicoach-dim:var(--agent-aicoach-dim);
+  --color-agent-synthesis:  var(--agent-synthesis);
+  --color-agent-synth-dim:  var(--agent-synth-dim);
+
+  /* ── Typography ──────────────────────────────────── */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+:root {
+  /* ── Base palette ────────────────────────────────── */
+  --bg-base:          #08080a;
+  --bg-surface:       #111116;
+  --bg-elevated:      #18181e;
+  --bg-subtle:        #1e1e26;
+
+  --border-default:   #2a2a35;
+  --border-subtle:    #3a3a48;
+
+  --text-primary:     #f0f0f6;
+  --text-secondary:   #a0a0b8;
+  --text-muted:       #606078;
+  --text-faint:       #404055;
+
+  /* ── Accent palette ──────────────────────────────── */
+  --accent-brand:      #7c6ffc;
+  --accent-brand-dim:  rgba(124, 111, 252, 0.12);
+  --accent-brand-text: #a89fff;
+  --accent-positive:   #34d399;
+  --accent-pos-dim:    rgba(52, 211, 153, 0.12);
+  --accent-warning:    #fbbf24;
+  --accent-warn-dim:   rgba(251, 191, 36, 0.12);
+  --accent-danger:     #f87171;
+  --accent-danger-dim: rgba(248, 113, 113, 0.12);
+  --accent-secure:     #60c8ff;
+  --accent-secure-dim: rgba(96, 200, 255, 0.10);
+
+  /* ── Agent identity ──────────────────────────────── */
+  --agent-realist:      #34d399;
+  --agent-realist-dim:  rgba(52, 211, 153, 0.12);
+  --agent-optimist:     #a89fff;
+  --agent-optimist-dim: rgba(168, 159, 255, 0.12);
+  --agent-critic:       #f87171;
+  --agent-critic-dim:   rgba(248, 113, 113, 0.12);
+  --agent-strategist:   #fbbf24;
+  --agent-strat-dim:    rgba(251, 191, 36, 0.12);
+  --agent-aicoach:      #60c8ff;
+  --agent-aicoach-dim:  rgba(96, 200, 255, 0.12);
+  --agent-synthesis:    #7c6ffc;
+  --agent-synth-dim:    rgba(124, 111, 252, 0.12);
+
+  /* ── shadcn semantic mappings ─────────────────────── */
+  --background:          var(--bg-base);
+  --foreground:          var(--text-primary);
+  --card:                var(--bg-surface);
+  --card-foreground:     var(--text-primary);
+  --popover:             var(--bg-elevated);
+  --popover-foreground:  var(--text-primary);
+  --primary:             var(--accent-brand);
+  --primary-foreground:  #ffffff;
+  --secondary:           var(--bg-subtle);
+  --secondary-foreground:var(--text-secondary);
+  --muted:               var(--bg-subtle);
+  --muted-foreground:    var(--text-muted);
+  --accent:              var(--bg-elevated);
+  --accent-foreground:   var(--text-primary);
+  --destructive:         var(--accent-danger);
+  --destructive-foreground: #ffffff;
+  --border:              var(--border-default);
+  --input:               var(--bg-elevated);
+  --ring:                var(--accent-brand);
+  --radius:              0.75rem;
+}
+
+* {
+  border-color: var(--border-default);
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
