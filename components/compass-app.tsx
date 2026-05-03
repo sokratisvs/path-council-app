@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import type { SetupConfig } from '@/lib/providers/config'
+import { SetupScreen } from '@/components/setup/setup-screen'
 
 export type Screen =
   | 'setup'
@@ -20,10 +22,16 @@ function PlaceholderScreen({ name }: { name: string }) {
 
 export function CompassApp() {
   const [screen, setScreen] = useState<Screen>('setup')
+  const [setupConfig, setSetupConfig] = useState<SetupConfig | null>(null)  // eslint-disable-line @typescript-eslint/no-unused-vars
+
+  function handleSetupComplete(config: SetupConfig) {
+    setSetupConfig(config)
+    setScreen('questionnaire')
+  }
 
   return (
     <div className="flex-1 overflow-auto">
-      {screen === 'setup' && <PlaceholderScreen name="Setup" />}
+      {screen === 'setup' && <SetupScreen onContinue={handleSetupComplete} />}
       {screen === 'questionnaire' && <PlaceholderScreen name="Questionnaire" />}
       {screen === 'arena' && <PlaceholderScreen name="Arena" />}
       {screen === 'results' && <PlaceholderScreen name="Results" />}

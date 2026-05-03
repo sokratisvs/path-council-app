@@ -6,13 +6,18 @@ let vaultKey = null
 const enc = new TextEncoder()
 const dec = new TextDecoder()
 
+// Safe loop-based b64 — spread into String.fromCharCode overflows the stack
+// on large buffers (>65k bytes), which breaks any real session payload.
 function b64urlEncode(buf) {
-  return btoa(String.fromCharCode(...new Uint8Array(buf)))
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+  const bytes = new Uint8Array(buf)
+  let str = ''
+  for (let i = 0; i < bytes.length; i++) str += String.fromCharCode(bytes[i])
+  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
 }
 
 function b64urlDecode(str) {
-  const padded = str.replace(/-/g, '+').replace(/_/g, '/').padEnd(str.length + (4 - str.length % 4) % 4, '=')
+  const padded = str.replace(/-/g, '+').replace(/_/g, '/')
+    .padEnd(str.length + (4 - str.length % 4) % 4, '=')
   return Uint8Array.from(atob(padded), c => c.charCodeAt(0))
 }
 
@@ -25,7 +30,7 @@ async function deriveKey(password, saltB64) {
     { name: 'PBKDF2', salt, iterations: 300_000, hash: 'SHA-256' },
     keyMaterial,
     { name: 'AES-GCM', length: 256 },
-    false, // non-extractable
+    false,
     ['encrypt', 'decrypt']
   )
 }
@@ -33,12 +38,7 @@ async function deriveKey(password, saltB64) {
 async function encryptText(plaintext) {
   if (!vaultKey) throw new Error('Vault locked')
   const iv = crypto.getRandomValues(new Uint8Array(12))
-  const ciphertext = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv },
-    vaultKey,
-    enc.encode(plaintext)
-  )
-  // Prepend IV to ciphertext
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, vaultKey, enc.encode(plaintext))
   const combined = new Uint8Array(iv.byteLength + ciphertext.byteLength)
   combined.set(iv, 0)
   combined.set(new Uint8Array(ciphertext), iv.byteLength)
@@ -50,11 +50,7 @@ async function decryptText(ciphertextB64) {
   const combined = b64urlDecode(ciphertextB64)
   const iv = combined.slice(0, 12)
   const ciphertext = combined.slice(12)
-  const plaintext = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv },
-    vaultKey,
-    ciphertext
-  )
+  const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, vaultKey, ciphertext)
   return dec.decode(plaintext)
 }
 
@@ -63,7 +59,6 @@ self.onmessage = async ({ data }) => {
     switch (data.type) {
       case 'derive': {
         vaultKey = await deriveKey(data.password, data.salt)
-        // Create verification token to send back
         const token = await encryptText('path-council-v1')
         self.postMessage({ type: 'derived', verificationToken: token })
         break
@@ -99,6 +94,8 @@ self.onmessage = async ({ data }) => {
         self.postMessage({ type: 'status', locked: vaultKey === null })
         break
       }
+      default:
+        console.warn('[vault worker] unknown message type:', data.type)
     }
   } catch (err) {
     self.postMessage({ type: 'error', message: err instanceof Error ? err.message : 'Unknown error', id: data.id })

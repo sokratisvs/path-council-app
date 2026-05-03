@@ -10,6 +10,17 @@ let worker: Worker | null = null
 let idCounter = 0
 const pending = new Map<string, { resolve: Resolve; reject: Reject }>()
 
+// One-shot listeners for no-id messages (derive, verify, clear, status).
+// Stores both resolve and reject so worker errors can propagate correctly.
+const oneShot = new Map<string, Array<{ resolve: Resolve; reject: Reject }>>()
+
+function rejectAll(err: Error) {
+  for (const { reject } of pending.values()) reject(err)
+  pending.clear()
+  for (const listeners of oneShot.values()) listeners.forEach(({ reject }) => reject(err))
+  oneShot.clear()
+}
+
 function getWorker(): Worker {
   if (!worker) {
     worker = new Worker('/vault.worker.js')
@@ -20,37 +31,61 @@ function getWorker(): Worker {
         if (data.type === 'error') reject(new Error(data.message))
         else resolve(data)
       } else {
-        // One-shot messages (derive, verify, clear, status)
         workerBroadcast(data)
       }
     }
-    worker.onerror = (e) => console.error('[vault worker]', e)
+    worker.onerror = (e) => {
+      console.error('[vault worker]', e)
+      rejectAll(new Error('Vault worker crashed'))
+      worker = null  // allow re-init on next call
+    }
   }
   return worker
 }
 
-// Simple one-shot promise for messages without an id
-const oneShot = new Map<string, Array<Resolve>>()
 function workerBroadcast(data: { type: string; [k: string]: unknown }) {
+  // Worker-level error with no id: reject every pending waitFor call.
+  if (data.type === 'error') {
+    rejectAll(new Error((data.message as string) ?? 'Vault worker error'))
+    return
+  }
   const listeners = oneShot.get(data.type)
   if (listeners) {
     oneShot.delete(data.type)
-    listeners.forEach((fn) => fn(data))
+    listeners.forEach(({ resolve }) => resolve(data))
   }
 }
-function waitFor(type: string): Promise<unknown> {
-  return new Promise((resolve) => {
-    const existing = oneShot.get(type) ?? []
-    oneShot.set(type, [...existing, resolve])
-  })
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`Vault operation '${label}' timed out`)), ms)
+    ),
+  ])
 }
 
-function send(type: string, payload: Record<string, unknown> = {}): Promise<unknown> {
+function waitFor<T>(type: string): Promise<T> {
+  return withTimeout(
+    new Promise<T>((resolve, reject) => {
+      const existing = oneShot.get(type) ?? []
+      oneShot.set(type, [...existing, { resolve: resolve as Resolve, reject }])
+    }),
+    15_000,
+    type
+  )
+}
+
+function send<T>(type: string, payload: Record<string, unknown> = {}): Promise<T> {
   const id = String(++idCounter)
-  return new Promise((resolve, reject) => {
-    pending.set(id, { resolve, reject })
-    getWorker().postMessage({ type, id, ...payload })
-  })
+  return withTimeout(
+    new Promise<T>((resolve, reject) => {
+      pending.set(id, { resolve: resolve as Resolve, reject })
+      getWorker().postMessage({ type, id, ...payload })
+    }),
+    15_000,
+    type
+  )
 }
 
 // ── Public API ────────────────────────────────────────────────────────────
@@ -62,33 +97,33 @@ export function generateSalt(): string {
 
 export async function setupVault(password: string, salt: string): Promise<string> {
   getWorker().postMessage({ type: 'derive', password, salt })
-  const result = await waitFor('derived') as { verificationToken: string }
+  const result = await waitFor<{ verificationToken: string }>('derived')
   return result.verificationToken
 }
 
 export async function unlockVault(password: string, salt: string, verificationToken: string): Promise<boolean> {
   getWorker().postMessage({ type: 'verify', password, salt, verificationToken })
-  const result = await waitFor('verified') as { ok: boolean }
+  const result = await waitFor<{ ok: boolean }>('verified')
   return result.ok
 }
 
 export async function lockVault(): Promise<void> {
   getWorker().postMessage({ type: 'clear' })
-  await waitFor('cleared')
+  await waitFor<unknown>('cleared')
 }
 
 export async function encrypt(plaintext: string): Promise<string> {
-  const result = await send('encrypt', { plaintext }) as { ciphertext: string }
+  const result = await send<{ ciphertext: string }>('encrypt', { plaintext })
   return result.ciphertext
 }
 
 export async function decrypt(ciphertext: string): Promise<string> {
-  const result = await send('decrypt', { ciphertext }) as { plaintext: string }
+  const result = await send<{ plaintext: string }>('decrypt', { ciphertext })
   return result.plaintext
 }
 
 export async function isVaultLocked(): Promise<boolean> {
   getWorker().postMessage({ type: 'status' })
-  const result = await waitFor('status') as { locked: boolean }
+  const result = await waitFor<{ locked: boolean }>('status')
   return result.locked
 }

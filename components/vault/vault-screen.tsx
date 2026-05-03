@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { setupVault, unlockVault, generateSalt } from '@/lib/vault/client'
-import { readVaultEntry, writeVaultEntry, clearVault } from '@/lib/vault/idb'
+import { readVaultEntry, writeVaultEntry, clearAllData } from '@/lib/vault/idb'
 
 interface VaultScreenProps {
   onUnlocked: () => void
@@ -46,6 +46,7 @@ export function VaultScreen({ onUnlocked }: VaultScreenProps) {
       const verificationToken = await setupVault(password, salt)
       await writeVaultEntry('vault_salt', salt)
       await writeVaultEntry('vault_verification', verificationToken)
+      setStatus('idle')
       onUnlocked()
     } catch {
       setError('Failed to create vault. Please try again.')
@@ -80,10 +81,11 @@ export function VaultScreen({ onUnlocked }: VaultScreenProps) {
 
   async function handleReset() {
     if (!window.confirm('This will erase all local data. Continue?')) return
-    await clearVault()
+    await clearAllData()
     setMode('setup')
     setPassword('')
     setConfirmPassword('')
+    setShowPassword(false)
     setError('')
     setStatus('idle')
   }
