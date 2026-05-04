@@ -1,11 +1,20 @@
 import { describe, it, expect } from 'vitest'
 import { SYNTHESIS_SYSTEM_PROMPT, buildSynthesisUserMessage } from '@/lib/agents/synthesis-prompt'
-import type { AgentCallResult, PathConsensus } from '@/lib/agents/types'
+import type { AgentCallResult, AgentOutput, PathConsensus } from '@/lib/agents/types'
+
+const AGENT_OUTPUT: AgentOutput = {
+  verdict: 'Strong path forward.',
+  topPaths: ['Path A', 'Path B', 'Path C'],
+  primaryRisk: 'Runway is tight.',
+  primaryOpportunity: 'Market is open.',
+  stance: 'bullish',
+  reasoning: 'The fundamentals support this transition given current market conditions.',
+}
 
 const AGENT_RESULTS: AgentCallResult[] = [
-  { agentId: 'realist', content: 'Realist output here.' },
-  { agentId: 'optimist', content: 'Optimist output here.' },
-  { agentId: 'critic', content: '', error: 'timeout' },
+  { agentId: 'financial', output: AGENT_OUTPUT, raw: JSON.stringify(AGENT_OUTPUT) },
+  { agentId: 'psychologist', output: AGENT_OUTPUT, raw: JSON.stringify(AGENT_OUTPUT) },
+  { agentId: 'strategist', output: null, raw: '', error: 'timeout' },
 ]
 
 const CONSENSUS: PathConsensus[] = [
@@ -13,8 +22,8 @@ const CONSENSUS: PathConsensus[] = [
     pathName: 'Path A',
     score: 80,
     descriptor: 'Strong consensus',
-    supportingAgents: ['realist', 'optimist'],
-    opposingAgents: ['critic'],
+    supportingAgents: ['financial', 'psychologist'],
+    opposingAgents: ['strategist'],
     neutralAgents: [],
     agentSentiments: [],
   },
@@ -33,6 +42,14 @@ describe('SYNTHESIS_SYSTEM_PROMPT', () => {
   it('mentions three paths', () => {
     expect(SYNTHESIS_SYSTEM_PROMPT).toContain('three')
   })
+
+  it('uses new domain-expert agent IDs', () => {
+    expect(SYNTHESIS_SYSTEM_PROMPT).toContain('financial')
+    expect(SYNTHESIS_SYSTEM_PROMPT).toContain('psychologist')
+    expect(SYNTHESIS_SYSTEM_PROMPT).toContain('strategist')
+    expect(SYNTHESIS_SYSTEM_PROMPT).toContain('skills')
+    expect(SYNTHESIS_SYSTEM_PROMPT).toContain('industry')
+  })
 })
 
 describe('buildSynthesisUserMessage', () => {
@@ -41,10 +58,11 @@ describe('buildSynthesisUserMessage', () => {
     expect(msg).toContain('Field: design')
   })
 
-  it('includes agent outputs', () => {
+  it('includes structured agent output fields', () => {
     const msg = buildSynthesisUserMessage(AGENT_RESULTS, CONSENSUS, 'profile')
-    expect(msg).toContain('Realist output here.')
-    expect(msg).toContain('Optimist output here.')
+    expect(msg).toContain('Strong path forward.')
+    expect(msg).toContain('bullish')
+    expect(msg).toContain('Runway is tight.')
   })
 
   it('marks errored agents as unavailable', () => {

@@ -12,11 +12,11 @@ You must respond with valid JSON only — no markdown, no commentary, no explana
       "description": "string — 2–3 sentence description of the path",
       "consensusScore": number between 0 and 100,
       "agentVoices": {
-        "realist": "string — one sentence capturing the Realist's view",
-        "optimist": "string — one sentence capturing the Optimist's view",
-        "critic": "string — one sentence capturing the Critic's view",
-        "strategist": "string — one sentence capturing the Strategist's view",
-        "aicoach": "string — one sentence capturing the AI Coach's view"
+        "financial": "string — one sentence capturing the Financial Expert's view",
+        "psychologist": "string — one sentence capturing the Psychologist's view",
+        "strategist": "string — one sentence capturing the Career Strategist's view",
+        "skills": "string — one sentence capturing the Skills Analyst's view",
+        "industry": "string — one sentence capturing the Industry Insider's view"
       },
       "aiAdvantage": "string — 1–2 sentences on where AI gives the most leverage on this path",
       "milestones": {
@@ -27,6 +27,9 @@ You must respond with valid JSON only — no markdown, no commentary, no explana
       "tradeoff": "string — one honest sentence on what this path costs"
     }
   ],
+  "summary": "string — 2–3 sentences summarising the user's situation and the key tension they face",
+  "strengths": ["string — one clear strength the user brings", "..."],
+  "blindSpots": ["string — one blind spot or risk the user should watch", "..."],
   "overallConsensus": "string — 1–2 sentences on where agents agreed and where they diverged"
 }
 
@@ -40,9 +43,17 @@ export function buildSynthesisUserMessage(
   const agentSection = agentResults
     .map((r) => {
       const label = r.agentId.toUpperCase()
-      return r.error
-        ? `[${label}]: (unavailable — ${r.error})`
-        : `[${label}]: ${r.content}`
+      if (r.error) return `[${label}]: (unavailable — ${r.error})`
+      if (!r.output) return `[${label}]: (no structured output — raw: ${r.raw.slice(0, 200)})`
+      return [
+        `[${label}]:`,
+        `  verdict: ${r.output.verdict}`,
+        `  stance: ${r.output.stance}`,
+        `  top paths: ${r.output.topPaths.join(' | ')}`,
+        `  primary risk: ${r.output.primaryRisk}`,
+        `  primary opportunity: ${r.output.primaryOpportunity}`,
+        `  reasoning: ${r.output.reasoning}`,
+      ].join('\n')
     })
     .join('\n\n')
 

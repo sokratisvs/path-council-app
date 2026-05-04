@@ -3,9 +3,9 @@ import { SCORER_SYSTEM_PROMPT, buildScorerUserMessage } from '@/lib/scoring/scor
 import type { AgentCallResult } from '@/lib/agents/types'
 
 const RESULTS: AgentCallResult[] = [
-  { agentId: 'realist', content: 'Realist content here.' },
-  { agentId: 'optimist', content: 'Optimist content here.' },
-  { agentId: 'critic', content: '', error: 'timeout' },
+  { agentId: 'financial', output: null, raw: 'Financial expert content here.' },
+  { agentId: 'psychologist', output: null, raw: 'Psychologist content here.' },
+  { agentId: 'strategist', output: null, raw: '', error: 'timeout' },
 ]
 
 describe('SCORER_SYSTEM_PROMPT', () => {
@@ -23,40 +23,46 @@ describe('SCORER_SYSTEM_PROMPT', () => {
     expect(SCORER_SYSTEM_PROMPT).toContain('neutral')
     expect(SCORER_SYSTEM_PROMPT).toContain('oppose')
   })
+
+  it('uses new domain-expert agent IDs', () => {
+    expect(SCORER_SYSTEM_PROMPT).toContain('financial')
+    expect(SCORER_SYSTEM_PROMPT).toContain('psychologist')
+    expect(SCORER_SYSTEM_PROMPT).toContain('industry')
+  })
 })
 
 describe('buildScorerUserMessage', () => {
   it('includes successful agent content', () => {
     const msg = buildScorerUserMessage(RESULTS)
-    expect(msg).toContain('Realist content here.')
-    expect(msg).toContain('Optimist content here.')
+    expect(msg).toContain('Financial expert content here.')
+    expect(msg).toContain('Psychologist content here.')
   })
 
   it('excludes errored agents', () => {
     const msg = buildScorerUserMessage(RESULTS)
     expect(msg).not.toContain('timeout')
-    expect(msg).not.toContain('THE CRITIC')
+    expect(msg).not.toContain('THE CAREER STRATEGIST')
   })
 
   it('uses uppercase agent labels', () => {
     const msg = buildScorerUserMessage(RESULTS)
-    expect(msg).toContain('THE REALIST')
-    expect(msg).toContain('THE OPTIMIST')
+    expect(msg).toContain('THE FINANCIAL EXPERT')
+    expect(msg).toContain('THE PSYCHOLOGIST')
   })
 
   it('returns empty string when all agents errored', () => {
     const allFailed: AgentCallResult[] = [
-      { agentId: 'realist', content: '', error: 'err' },
-      { agentId: 'optimist', content: '', error: 'err' },
+      { agentId: 'financial', output: null, raw: '', error: 'err' },
+      { agentId: 'psychologist', output: null, raw: '', error: 'err' },
     ]
     expect(buildScorerUserMessage(allFailed)).toBe('')
   })
 
-  it('handles aicoach label correctly', () => {
+  it('handles industry insider label correctly', () => {
     const results: AgentCallResult[] = [
-      { agentId: 'aicoach', content: 'AI coach content.' },
+      { agentId: 'industry', output: null, raw: 'Industry insider content.' },
     ]
     const msg = buildScorerUserMessage(results)
-    expect(msg).toContain('THE AI COACH')
+    expect(msg).toContain('THE INDUSTRY INSIDER')
   })
 })

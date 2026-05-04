@@ -12,7 +12,7 @@ export async function scoreConsensus(
   config: SetupConfig,
   activeAgents: AgentId[]
 ): Promise<PathConsensus[]> {
-  const successful = agentResults.filter((r) => !r.error && r.content)
+  const successful = agentResults.filter((r) => !r.error && r.raw)
   if (successful.length < 2) return []
 
   const userMessage = buildScorerUserMessage(successful)

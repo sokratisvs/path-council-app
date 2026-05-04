@@ -12,7 +12,7 @@ describe('AGENT_IDS_CONST', () => {
   })
 
   it('includes all required ids', () => {
-    const ids: AgentId[] = ['realist', 'optimist', 'critic', 'strategist', 'aicoach']
+    const ids: AgentId[] = ['financial', 'psychologist', 'strategist', 'skills', 'industry']
     for (const id of ids) expect(AGENT_IDS_CONST).toContain(id)
   })
 })
