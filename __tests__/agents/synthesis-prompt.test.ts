@@ -9,7 +9,15 @@ const AGENT_RESULTS: AgentCallResult[] = [
 ]
 
 const CONSENSUS: PathConsensus[] = [
-  { pathName: 'Path A', score: 80, supportingAgents: ['realist', 'optimist'], opposingAgents: ['critic'] },
+  {
+    pathName: 'Path A',
+    score: 80,
+    descriptor: 'Strong consensus',
+    supportingAgents: ['realist', 'optimist'],
+    opposingAgents: ['critic'],
+    neutralAgents: [],
+    agentSentiments: [],
+  },
 ]
 
 describe('SYNTHESIS_SYSTEM_PROMPT', () => {

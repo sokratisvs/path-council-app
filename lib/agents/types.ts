@@ -6,12 +6,7 @@ export interface AgentCallResult {
   error?: string
 }
 
-export interface PathConsensus {
-  pathName: string
-  score: number
-  supportingAgents: AgentId[]
-  opposingAgents: AgentId[]
-}
+export type { PathConsensus } from '@/lib/scoring/types'
 
 export interface RecommendedPath {
   name: string

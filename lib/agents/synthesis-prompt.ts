@@ -47,10 +47,11 @@ export function buildSynthesisUserMessage(
     .join('\n\n')
 
   const scoreSection = consensusScores
-    .map(
-      (c) =>
-        `${c.pathName}: score ${c.score}/100 | supporting: ${c.supportingAgents.join(', ') || 'none'} | opposing: ${c.opposingAgents.join(', ') || 'none'}`
-    )
+    .map((c) => {
+      const supporting = c.supportingAgents.join(', ') || 'none'
+      const opposing = c.opposingAgents.join(', ') || 'none'
+      return `${c.pathName}: ${c.score}/100 — ${c.descriptor} (${supporting} agreed, ${opposing} pushed back)`
+    })
     .join('\n')
 
   return [
