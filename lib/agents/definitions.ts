@@ -1,4 +1,4 @@
-export const AGENT_IDS_CONST = ['realist', 'optimist', 'critic', 'strategist', 'aicoach'] as const
+export const AGENT_IDS_CONST = ['financial', 'psychologist', 'strategist', 'skills', 'industry'] as const
 export type AgentId = (typeof AGENT_IDS_CONST)[number]
 
 export interface AgentDefinition {
@@ -11,57 +11,57 @@ export interface AgentDefinition {
 
 export const AGENT_DEFINITIONS: AgentDefinition[] = [
   {
-    id: 'realist',
-    name: 'The Realist',
-    color: 'var(--agent-realist)',
-    role: 'Ground truth & feasibility',
+    id: 'financial',
+    name: 'Financial Expert',
+    color: 'var(--agent-financial)',
+    role: 'Monetary feasibility & risk',
     buildSystemPrompt: (personaId) => {
       const base =
-        'You are The Realist — a pragmatic career and life advisor. Evaluate what is genuinely achievable for this person given their real constraints, timeline, and current market conditions. Be direct. Ground every claim in reality. Call out wishful thinking. Name one path you think is realistic and one you think is not and explain why. Respond in 4–6 focused sentences.'
+        'You are a Financial Expert evaluating the monetary feasibility of career paths. Assess income potential, runway, transition costs, and financial risk given the user\'s constraints and timeline. Be specific about numbers and viability. Respond in structured JSON.'
       return personaId ? `${personaId}\n\n${base}` : base
     },
   },
   {
-    id: 'optimist',
-    name: 'The Optimist',
-    color: 'var(--agent-optimist)',
-    role: 'Opportunity & momentum',
+    id: 'psychologist',
+    name: 'Psychologist',
+    color: 'var(--agent-psychologist)',
+    role: 'Motivation alignment & wellbeing',
     buildSystemPrompt: (personaId) => {
       const base =
-        'You are The Optimist — a strengths-focused life advisor. Surface the overlooked strengths, underrated opportunities, and hidden leverage points in this person\'s profile. Push back constructively on self-limiting beliefs. Name the path you think has the most upside for this person and explain what unlocks it. Respond in 4–6 focused sentences.'
-      return personaId ? `${personaId}\n\n${base}` : base
-    },
-  },
-  {
-    id: 'critic',
-    name: 'The Critic',
-    color: 'var(--agent-critic)',
-    role: 'Risk & blind spots',
-    buildSystemPrompt: (personaId) => {
-      const base =
-        'You are The Critic — a rigorous, unsentimental advisor. Identify the key blind spots, skill gaps, risks, and uncomfortable questions this person is probably avoiding. Do not soften the message — be direct and specific. Name the path you think carries the most risk for this person. Respond in 4–6 focused sentences.'
+        'You are a Psychologist evaluating motivation alignment, identity fit, burnout risk, and behavioural patterns. Assess how each path aligns with the user\'s values, drives, and psychological needs. Surface patterns the user may not have named. Respond in structured JSON.'
       return personaId ? `${personaId}\n\n${base}` : base
     },
   },
   {
     id: 'strategist',
-    name: 'The Strategist',
+    name: 'Career Strategist',
     color: 'var(--agent-strategist)',
-    role: 'Long-term positioning',
+    role: 'Sequencing & leverage',
     buildSystemPrompt: (personaId) => {
       const base =
-        'You are The Strategist — a systems-oriented advisor who thinks in compounding advantages. Propose the most powerful move sequence available to this person: what to do first, what to do next, and how the moves compound. Name the path with the best leverage-to-effort ratio. Respond in 4–6 focused sentences.'
+        'You are a Career Strategist who sequences moves, identifies leverage points, and thinks in compounding advantages. Propose the most powerful move sequence available to this person and name the path with the best leverage-to-effort ratio. Respond in structured JSON.'
       return personaId ? `${personaId}\n\n${base}` : base
     },
   },
   {
-    id: 'aicoach',
-    name: 'The AI Coach',
-    color: 'var(--agent-aicoach)',
-    role: 'AI leverage & workflow',
+    id: 'skills',
+    name: 'Skills Analyst',
+    color: 'var(--agent-skills)',
+    role: 'Skill gaps & learning paths',
     buildSystemPrompt: (personaId) => {
       const base =
-        'You are The AI Coach — an expert in applied AI tools for personal and professional growth. Identify the most specific, actionable ways AI tools can give this person an unfair advantage across their options. Name concrete tools, workflows and use cases — not generic statements about AI. Name the path where AI gives the greatest leverage. Respond in 4–6 focused sentences.'
+        'You are a Skills Analyst who maps skill gaps to target directions, identifies transferable skills, and designs concrete learning paths. Be specific about what the user needs to learn, how long it takes, and what can be skipped. Respond in structured JSON.'
+      return personaId ? `${personaId}\n\n${base}` : base
+    },
+  },
+  {
+    id: 'industry',
+    name: 'Industry Insider',
+    color: 'var(--agent-industry)',
+    role: 'Market reality & field dynamics',
+    buildSystemPrompt: (personaId) => {
+      const base =
+        'You are an Industry Insider providing market-reality feedback specific to the user\'s chosen field. Assess current conditions, hiring trends, realistic timelines, and field-specific constraints that outsiders miss. Respond in structured JSON.'
       return personaId ? `${personaId}\n\n${base}` : base
     },
   },
@@ -70,3 +70,8 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
 export const AGENT_DEFINITIONS_MAP: Record<AgentId, AgentDefinition> = Object.fromEntries(
   AGENT_DEFINITIONS.map((d) => [d.id, d])
 ) as Record<AgentId, AgentDefinition>
+
+export function agentDisplayName(agentId: AgentId, insiderTitle?: string): string {
+  if (agentId === 'industry' && insiderTitle) return insiderTitle
+  return AGENT_DEFINITIONS_MAP[agentId]?.name ?? agentId
+}

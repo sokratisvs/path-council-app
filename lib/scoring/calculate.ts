@@ -1,6 +1,12 @@
 import type { AgentId } from '@/lib/agents/definitions'
 import type { AgentPathSentiment, PathConsensus } from './types'
 
+export function scoreToDescriptor(score: number): PathConsensus['descriptor'] {
+  if (score >= 80) return 'Strong consensus'
+  if (score >= 50) return 'Moderate consensus'
+  return 'Speculative'
+}
+
 export function calculateConsensus(
   sentiments: AgentPathSentiment[],
   activeAgents: AgentId[]
@@ -28,12 +34,7 @@ export function calculateConsensus(
         100
       const score = Math.round(Math.min(100, Math.max(0, raw)))
 
-      const descriptor: PathConsensus['descriptor'] =
-        score >= 80
-          ? 'Strong consensus'
-          : score >= 50
-            ? 'Moderate consensus'
-            : 'Speculative'
+      const descriptor = scoreToDescriptor(score)
 
       return {
         pathName,

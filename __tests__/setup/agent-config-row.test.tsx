@@ -6,7 +6,7 @@ import { AGENT_META } from '@/lib/agents/personas'
 
 describe('AgentConfigRow', () => {
   const defaultProps = {
-    agentId: 'realist' as const,
+    agentId: 'financial' as const,
     active: true,
     persona: null,
     canDeactivate: true,
@@ -16,8 +16,8 @@ describe('AgentConfigRow', () => {
 
   it('renders agent name and role', () => {
     render(<AgentConfigRow {...defaultProps} />)
-    expect(screen.getByText(AGENT_META.realist.name)).toBeInTheDocument()
-    expect(screen.getByText(AGENT_META.realist.role)).toBeInTheDocument()
+    expect(screen.getByText(AGENT_META.financial.name)).toBeInTheDocument()
+    expect(screen.getByText(AGENT_META.financial.role)).toBeInTheDocument()
   })
 
   it('calls onToggle when active and canDeactivate is true', async () => {
@@ -48,8 +48,8 @@ describe('AgentConfigRow', () => {
     expect(screen.getByRole('combobox')).toBeDisabled()
   })
 
-  it('renders for all agent ids', () => {
-    const agents = ['realist', 'optimist', 'critic', 'strategist', 'aicoach'] as const
+  it('renders for all static agent ids', () => {
+    const agents = ['financial', 'psychologist', 'strategist', 'skills'] as const
     for (const id of agents) {
       const { unmount } = render(
         <AgentConfigRow

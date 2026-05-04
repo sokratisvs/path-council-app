@@ -3,7 +3,7 @@ import { calculateConsensus } from '@/lib/scoring/calculate'
 import type { AgentPathSentiment } from '@/lib/scoring/types'
 import type { AgentId } from '@/lib/agents/definitions'
 
-const ACTIVE: AgentId[] = ['realist', 'optimist', 'critic', 'strategist', 'aicoach']
+const ACTIVE: AgentId[] = ['financial', 'psychologist', 'strategist', 'skills', 'industry']
 
 describe('calculateConsensus', () => {
   it('returns 100 when all active agents support a path', () => {
@@ -19,10 +19,10 @@ describe('calculateConsensus', () => {
   })
 
   it('returns 100 for two supporters out of two active agents', () => {
-    const twoActive: AgentId[] = ['realist', 'optimist']
+    const twoActive: AgentId[] = ['financial', 'psychologist']
     const sentiments: AgentPathSentiment[] = [
-      { agentId: 'realist', pathName: 'Path A', stance: 'support', quote: 'Yes.' },
-      { agentId: 'optimist', pathName: 'Path A', stance: 'support', quote: 'Definitely.' },
+      { agentId: 'financial', pathName: 'Path A', stance: 'support', quote: 'Yes.' },
+      { agentId: 'psychologist', pathName: 'Path A', stance: 'support', quote: 'Definitely.' },
     ]
     const [result] = calculateConsensus(sentiments, twoActive)
     expect(result.score).toBe(100)
@@ -55,8 +55,8 @@ describe('calculateConsensus', () => {
 
   it('groups sentiments by path name', () => {
     const sentiments: AgentPathSentiment[] = [
-      { agentId: 'realist', pathName: 'Path A', stance: 'support', quote: 'q' },
-      { agentId: 'optimist', pathName: 'Path B', stance: 'oppose', quote: 'q' },
+      { agentId: 'financial', pathName: 'Path A', stance: 'support', quote: 'q' },
+      { agentId: 'psychologist', pathName: 'Path B', stance: 'oppose', quote: 'q' },
     ]
     const results = calculateConsensus(sentiments, ACTIVE)
     expect(results).toHaveLength(2)
@@ -67,8 +67,8 @@ describe('calculateConsensus', () => {
 
   it('sorts results by score descending', () => {
     const sentiments: AgentPathSentiment[] = [
-      { agentId: 'realist', pathName: 'Low', stance: 'oppose', quote: 'q' },
-      { agentId: 'optimist', pathName: 'High', stance: 'support', quote: 'q' },
+      { agentId: 'financial', pathName: 'Low', stance: 'oppose', quote: 'q' },
+      { agentId: 'psychologist', pathName: 'High', stance: 'support', quote: 'q' },
     ]
     const results = calculateConsensus(sentiments, ACTIVE)
     expect(results[0].pathName).toBe('High')
@@ -88,14 +88,14 @@ describe('calculateConsensus', () => {
 
   it('populates supportingAgents, opposingAgents, neutralAgents correctly', () => {
     const sentiments: AgentPathSentiment[] = [
-      { agentId: 'realist', pathName: 'P', stance: 'support', quote: 'q' },
-      { agentId: 'optimist', pathName: 'P', stance: 'neutral', quote: 'q' },
-      { agentId: 'critic', pathName: 'P', stance: 'oppose', quote: 'q' },
+      { agentId: 'financial', pathName: 'P', stance: 'support', quote: 'q' },
+      { agentId: 'psychologist', pathName: 'P', stance: 'neutral', quote: 'q' },
+      { agentId: 'strategist', pathName: 'P', stance: 'oppose', quote: 'q' },
     ]
     const [result] = calculateConsensus(sentiments, ACTIVE)
-    expect(result.supportingAgents).toEqual(['realist'])
-    expect(result.neutralAgents).toEqual(['optimist'])
-    expect(result.opposingAgents).toEqual(['critic'])
+    expect(result.supportingAgents).toEqual(['financial'])
+    expect(result.neutralAgents).toEqual(['psychologist'])
+    expect(result.opposingAgents).toEqual(['strategist'])
   })
 
   it('returns empty array when given no sentiments', () => {
@@ -104,7 +104,7 @@ describe('calculateConsensus', () => {
 
   it('returns empty array when activeAgents is empty (avoids NaN scores)', () => {
     const sentiments: AgentPathSentiment[] = [
-      { agentId: 'realist', pathName: 'P', stance: 'support', quote: 'q' },
+      { agentId: 'financial', pathName: 'P', stance: 'support', quote: 'q' },
     ]
     expect(calculateConsensus(sentiments, [])).toEqual([])
   })

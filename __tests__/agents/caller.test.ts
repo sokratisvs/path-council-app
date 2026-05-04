@@ -22,22 +22,31 @@ const CONFIG: SetupConfig = {
   provider: 'openai',
   apiKey: 'test-key',
   model: 'gpt-4o',
-  activeAgents: ['realist', 'optimist'] as AgentId[],
+  activeAgents: ['financial', 'psychologist'] as AgentId[],
   agentPersonas: {
-    realist: null,
-    optimist: null,
-    critic: null,
+    financial: null,
+    psychologist: null,
     strategist: null,
-    aicoach: null,
+    skills: null,
+    industry: null,
   },
 }
 
 const PERSONAS: Record<AgentId, string | null> = {
-  realist: null,
-  optimist: null,
-  critic: null,
+  financial: null,
+  psychologist: null,
   strategist: null,
-  aicoach: null,
+  skills: null,
+  industry: null,
+}
+
+const AGENT_OUTPUT = {
+  verdict: 'This path is feasible.',
+  topPaths: ['Path A', 'Path B', 'Path C'],
+  primaryRisk: 'Financial runway.',
+  primaryOpportunity: 'Market timing.',
+  stance: 'bullish' as const,
+  reasoning: 'Strong fundamentals support this direction.',
 }
 
 function mockFetch(body: unknown, ok = true) {
@@ -54,46 +63,57 @@ beforeEach(() => {
 })
 
 describe('callAgent', () => {
-  it('returns content on success', async () => {
-    global.fetch = mockFetch({ choices: [{ message: { content: 'agent reply' } }] })
-    const result = await callAgent('realist', CONFIG, PROFILE, PERSONAS)
-    expect(result.agentId).toBe('realist')
-    expect(result.content).toBe('agent reply')
+  it('returns parsed output on success with valid JSON', async () => {
+    global.fetch = mockFetch({ choices: [{ message: { content: JSON.stringify(AGENT_OUTPUT) } }] })
+    const result = await callAgent('financial', CONFIG, PROFILE, PERSONAS)
+    expect(result.agentId).toBe('financial')
+    expect(result.output).toEqual(AGENT_OUTPUT)
+    expect(result.raw).toBe(JSON.stringify(AGENT_OUTPUT))
+    expect(result.error).toBeUndefined()
+  })
+
+  it('returns null output when response is not valid AgentOutput JSON', async () => {
+    global.fetch = mockFetch({ choices: [{ message: { content: 'plain text reply' } }] })
+    const result = await callAgent('psychologist', CONFIG, PROFILE, PERSONAS)
+    expect(result.agentId).toBe('psychologist')
+    expect(result.output).toBeNull()
+    expect(result.raw).toBe('plain text reply')
     expect(result.error).toBeUndefined()
   })
 
   it('returns error on adapter failure', async () => {
     global.fetch = mockFetch('error body', false)
-    const result = await callAgent('optimist', CONFIG, PROFILE, PERSONAS)
-    expect(result.agentId).toBe('optimist')
-    expect(result.content).toBe('')
+    const result = await callAgent('strategist', CONFIG, PROFILE, PERSONAS)
+    expect(result.agentId).toBe('strategist')
+    expect(result.output).toBeNull()
+    expect(result.raw).toBe('')
     expect(result.error).toBeTruthy()
   })
 
   it('returns error on fetch throw', async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error('network down'))
-    const result = await callAgent('critic', CONFIG, PROFILE, PERSONAS)
-    expect(result.ok).toBeUndefined()
+    const result = await callAgent('skills', CONFIG, PROFILE, PERSONAS)
     expect(result.error).toContain('network down')
+    expect(result.output).toBeNull()
   })
 
   it('includes persona prefix in system prompt when persona is set', async () => {
-    const spy = mockFetch({ choices: [{ message: { content: 'ok' } }] })
+    const spy = mockFetch({ choices: [{ message: { content: '{}' } }] })
     global.fetch = spy
-    const personasWithRealist: Record<AgentId, string | null> = {
+    const personasWithFinancial: Record<AgentId, string | null> = {
       ...PERSONAS,
-      realist: 'Operator who bootstrapped and sold a company',
+      financial: 'Bootstrapped founder who reached profitability without VC',
     }
-    await callAgent('realist', CONFIG, PROFILE, personasWithRealist)
+    await callAgent('financial', CONFIG, PROFILE, personasWithFinancial)
     const [, init] = spy.mock.calls[0] as [string, RequestInit]
     const body = JSON.parse(init.body as string)
     const systemMsg = body.messages[0].content as string
-    expect(systemMsg).toContain('bootstrapped')
+    expect(systemMsg).toContain('bootstrapped founder')
   })
 
   it('returns correct agentId regardless of provider', async () => {
-    global.fetch = mockFetch({ choices: [{ message: { content: 'ok' } }] })
-    for (const agentId of ['realist', 'optimist', 'critic', 'strategist', 'aicoach'] as AgentId[]) {
+    global.fetch = mockFetch({ choices: [{ message: { content: '{}' } }] })
+    for (const agentId of ['financial', 'psychologist', 'strategist', 'skills', 'industry'] as AgentId[]) {
       const result = await callAgent(agentId, CONFIG, PROFILE, PERSONAS)
       expect(result.agentId).toBe(agentId)
     }

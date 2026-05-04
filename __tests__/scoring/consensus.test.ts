@@ -19,15 +19,15 @@ const CONFIG: SetupConfig = {
   provider: 'openai',
   apiKey: 'sk-test',
   model: 'gpt-4o',
-  activeAgents: ['realist', 'optimist'],
-  agentPersonas: { realist: null, optimist: null, critic: null, strategist: null, aicoach: null },
+  activeAgents: ['financial', 'psychologist'],
+  agentPersonas: { financial: null, psychologist: null, strategist: null, skills: null, industry: null },
 }
 
-const ACTIVE: AgentId[] = ['realist', 'optimist']
+const ACTIVE: AgentId[] = ['financial', 'psychologist']
 
 const SUCCESSFUL_RESULTS: AgentCallResult[] = [
-  { agentId: 'realist', content: 'Realist says Path A is great.' },
-  { agentId: 'optimist', content: 'Optimist agrees on Path A.' },
+  { agentId: 'financial', output: null, raw: 'Financial says Path A is great.' },
+  { agentId: 'psychologist', output: null, raw: 'Psychologist agrees on Path A.' },
 ]
 
 beforeEach(() => {
@@ -37,8 +37,8 @@ beforeEach(() => {
 describe('scoreConsensus', () => {
   it('returns empty array when fewer than two successful agents', async () => {
     const results: AgentCallResult[] = [
-      { agentId: 'realist', content: 'ok' },
-      { agentId: 'optimist', content: '', error: 'failed' },
+      { agentId: 'financial', output: null, raw: 'ok' },
+      { agentId: 'psychologist', output: null, raw: '', error: 'failed' },
     ]
     const result = await scoreConsensus(results, CONFIG, ACTIVE)
     expect(result).toEqual([])
@@ -46,8 +46,8 @@ describe('scoreConsensus', () => {
 
   it('returns empty array when all agents errored', async () => {
     const results: AgentCallResult[] = [
-      { agentId: 'realist', content: '', error: 'err' },
-      { agentId: 'optimist', content: '', error: 'err' },
+      { agentId: 'financial', output: null, raw: '', error: 'err' },
+      { agentId: 'psychologist', output: null, raw: '', error: 'err' },
     ]
     const result = await scoreConsensus(results, CONFIG, ACTIVE)
     expect(result).toEqual([])
@@ -83,8 +83,8 @@ describe('scoreConsensus', () => {
       call: vi.fn().mockResolvedValue({ ok: true, content: '[]' }),
     })
     vi.mocked(safeParseJSON).mockReturnValue([
-      { agentId: 'realist', pathName: 'Path A', stance: 'support', quote: 'Great path.' },
-      { agentId: 'optimist', pathName: 'Path A', stance: 'support', quote: 'Agreed.' },
+      { agentId: 'financial', pathName: 'Path A', stance: 'support', quote: 'Great path.' },
+      { agentId: 'psychologist', pathName: 'Path A', stance: 'support', quote: 'Agreed.' },
     ])
     const result = await scoreConsensus(SUCCESSFUL_RESULTS, CONFIG, ACTIVE)
     expect(result).toHaveLength(1)
