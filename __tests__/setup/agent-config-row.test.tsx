@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AgentConfigRow } from '@/components/setup/agent-config-row'
-import { AGENT_META, PERSONAS } from '@/lib/agents/personas'
+import { AGENT_META } from '@/lib/agents/personas'
 
 describe('AgentConfigRow', () => {
   const defaultProps = {
